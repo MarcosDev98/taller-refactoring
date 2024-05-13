@@ -1,0 +1,77 @@
+
+
+COSAS QUE ESTAN MAL DE ESTE CÓDIGO:
+
+1. VIOLA EL PRINCIPIO DE RESPONSABILIDAD ÚNICA.
+   UN SOLO MODULO SE ENCARGA DE:
+   
+   # 1. FORMATEAR LA MONEDA PARA LA IMPRESIÓN DE LA FACTURA
+   # 2. CALCULAR EL MONTO INDIVIDUAL DE CADA OBRA, QUE ADEMAS LO HACE CON UN SWITCH,
+     LO CUAL NO ES LO DESEABLE.
+   # 3. CALCULA LOS CREDITOS QUE RECIBE COMO PREMIO LA COMPAÑÍA TEATRAL.
+   # 4. IMPRIME LOS CÁLCULOS DE LOS MONTOS.
+   # 5. IMPRIME LOS CREDITOS.
+
+2. TAMBIÉN SE VIOLA EL PRINCIPIO DE OPEN/CLOSE Y POR ENDE SE VIOLA LISKOV Y TAMBIÉN
+   EL PRINCIPIO DE INVERSIÓN DE DEPENDENCIAS.
+
+
+PARA CORREGIR ESTOS ERRORES VAMOS A REFACTORIZAR DE LA SIGUIENTE MANERA:
+
+ 1. EXTRAER EL CÁLCULO DEL MONTO POR OBRA. (PATRON DE REFACTORING "EXTRACT FUNCTION")
+   Para eso vamos a crear una nueva función amountFor(perf, play).
+ 
+ 2. Extraemos una nueva función para consultar una obra:
+    function playFor(aPerformance)
+     
+ 3. Reemplazar variables temporales.
+   En vez de tener una variable temporar "play", utilizo el play que obtengo
+   de la funcion playFor(perf)
+
+ 4. Extraemos el cálculo de los créditos en una nueva función.
+
+ 5. Extraemos el formato de la moneda.
+
+ 6. Separamos los cálculos de créditos y facturación que estan en un mismo loop.
+
+ 7. Separando el cálculo de la factura de la impresión de la misma (Split Phase)
+     - Extract function renderPlainText(data, invoice, plays).
+     - Incorporamos los datos a renderizar --> statmentData.
+     - Incorporamos los datos del customer.
+     - Incorporamos los datos de performances.
+     - Enriquecemos la data de cada performance --> agregamos la obra (play) que
+       le corresponde.
+     - Migramos playFor() a statement
+     - Seguimos enriqueciendo --> migramos amountFor()
+     - Seguimos enriqueciendo --> migramos volumeCreditsFor()
+     - Seguimos enriqueciendo --> migramos totalAmount()
+     - Seguimos enriqueciendo --> migramos totalVolumeCredits()
+
+ 8.  Replace loop with Pipeline.
+     - Usamos reduce para reemplazar los for en el cálculo de totales.
+     
+ 9. Reemplazar condicionales (switch) con polimorfismo.
+    (Replace Conditional With Polymorphism).
+    - Creamos una nueva clase PerformanceCalculator.
+    - Movemos las funciones de cálculo.
+      - amountFor() --> get amount();
+      - volumeCreditsFor() --> get volumeCredits();   
+
+10. PerformanceCalculator polimórfica.
+  - Aplicamos el refactoring: Replace Constructor with Factory Function.
+    - new PerformanceCalculator() --> createPerformanceCalculator().
+    - Replace Type Code with Subclasses --> classes comedyCalculator & tragedyCalculator
+    - Replace Conditional with Polymorphism: movemos el codigo del switch a cada una de las correspondientes clases.
+
+  // Primer paso del refactoring.
+  /*
+  Aislamos el cálculo de los montos de cada obra en una función aparte
+  para que no este todo en un solo lugar.
+
+  Luego renombramos variales:
+  - thisAmount --> result
+  - perf --> aPerformance
+  - play --> aPlay
+  
+
+  */
